@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geoportal_TRACTEBEL ENGINEERING</title>
+    <link rel="icon" type="image/png" sizes="256x256" href="favicon_tractbel.png?v=2">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass">
+            <div class="sidebar-header">
+                <div class="logos-container">
+                    <div class="logos-top-row">
+                        <img src="Logos/Logo_Tractebel.png" alt="Tractebel">
+                        <img src="Logos/CITinova_Principal_Vertical_FundoClaro.png" alt="CITinova">
+                    </div>
+                    <div class="logos-bottom-row">
+                        <img src="Logos/Logos_unidas.png" alt="Patrocinadores: ONU Meio Ambiente, GEF, FUNBIO, ABC, MMA, MCidades, MCTI, Governo Federal">
+                    </div>
+                </div>
+                <div class="header-tools">
+                    <button id="btn-theme-toggle" class="tool-btn" title="Alternar Tema Claro / Escuro">
+                        <i class="fa-solid fa-sun"></i>
+                        <span id="theme-label">Modo Claro</span>
+                    </button>
+                    <button id="btn-google-earth-3d" class="tool-btn earth-btn" title="Abrir visualização atual em 3D no Google Earth Web">
+                        <i class="fa-solid fa-cube"></i>
+                        <span>Google Earth 3D</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="section-title">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <h3>Mapas de Fundo</h3>
+                </div>
+                <div class="basemap-controls">
+                    <label class="radio-label">
+                        <input type="radio" name="basemap" value="google_hybrid" checked>
+                        <div class="radio-btn"></div>
+                        <span>Google Satélite (Híbrido)</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="basemap" value="google_sat">
+                        <div class="radio-btn"></div>
+                        <span>Google Satélite (Puro)</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="basemap" value="google_streets">
+                        <div class="radio-btn"></div>
+                        <span>Google Maps (Ruas / 3D)</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="basemap" value="satellite">
+                        <div class="radio-btn"></div>
+                        <span>Satélite (Esri)</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="basemap" value="topo">
+                        <div class="radio-btn"></div>
+                        <span>Topográfico (Esri)</span>
+                    </label>
+                </div>
+
+                <div class="section-header-row">
+                    <div class="section-title" style="margin: 0;">
+                        <i class="fa-solid fa-draw-polygon"></i>
+                        <h3>Camadas Vetoriais</h3>
+                    </div>
+                    <div class="layer-quick-actions">
+                        <button id="btn-restore-layers" class="mini-btn hidden" title="Restaurar camadas excluídas">
+                            <i class="fa-solid fa-rotate-left"></i> Restaurar
+                        </button>
+                        <button id="btn-fit-rmb" class="mini-btn" title="Centralizar na RMB">
+                            <i class="fa-solid fa-crosshairs"></i> RMB
+                        </button>
+                        <button id="btn-clear-layers" class="mini-btn" title="Desmarcar todas">
+                            <i class="fa-solid fa-eye-slash"></i> Limpar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="add-layer-bar">
+                    <button id="btn-add-layer" type="button" class="add-layer-btn" title="Importar arquivo GeoJSON, Raster (.tif/.tiff/.png/.jpg), Shapefile (.zip), KML ou KMZ do computador">
+                        <i class="fa-solid fa-file-circle-plus"></i>
+                        <span>+ Adicionar Camada (GeoJSON / Raster / KML / ZIP)</span>
+                    </button>
+                    <input type="file" id="file-upload-input" accept=".geojson,.json,.kml,.kmz,.zip,.gpx,.tif,.tiff,.png,.jpg,.jpeg,.webp" multiple style="display: none;">
+                </div>
+
+                <div class="layer-search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="layer-search" placeholder="Filtrar camadas...">
+                </div>
+
+                <div id="layer-controls" class="layer-controls">
+                    <!-- Layer checkboxes will be generated here -->
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <p>Tractebel Engineering &bull; Projeto IARA</p>
+            </div>
+        </aside>
+
+        <!-- Map Container -->
+        <main id="map"></main>
+
+        <!-- Legenda Flutuante MapBiomas -->
+        <div id="mapbiomas-legend" class="mapbiomas-legend glass hidden">
+            <div class="legend-header">
+                <div>
+                    <h4 id="legend-main-title"><i class="fa-solid fa-palette"></i> Uso e Cobertura do Solo (2025)</h4>
+                    <span class="legend-subtitle">Coleção 11 Oficial MapBiomas &bull; RMB</span>
+                </div>
+                <button id="btn-toggle-legend-body" class="mini-btn" title="Minimizar/Expandir legenda">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+            </div>
+            <div id="legend-body" class="legend-body">
+                <div class="opacity-control">
+                    <label for="raster-opacity">Transparência / Opacidade: <strong id="opacity-val">85%</strong></label>
+                    <input type="range" id="raster-opacity" min="10" max="100" value="85">
+                </div>
+                <div id="legend-items" class="legend-items"></div>
+            </div>
+        </div>
+
+        <!-- Loading Toast / Indicator -->
+        <div id="loading-overlay" class="loading-overlay glass hidden">
+            <div class="spinner"></div>
+            <p id="loading-text">Processando dados espaciais...</p>
+        </div>
+
+        <!-- Popover de Paleta de Cores das Camadas GeoJSON -->
+        <div id="color-palette-popover" class="color-palette-popover glass hidden">
+            <div class="palette-header">
+                <span id="palette-layer-title">Cor da Camada</span>
+                <button id="btn-close-palette" type="button" class="palette-close-btn" title="Fechar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="palette-swatches" class="palette-swatches"></div>
+            <div class="palette-custom-row">
+                <label for="palette-custom-input">Cor personalizada:</label>
+                <input type="color" id="palette-custom-input" value="#00e676">
+            </div>
+            <div class="palette-fillmode-row">
+                <label>Modo de Preenchimento:</label>
+                <div class="fillmode-btn-group">
+                    <button type="button" class="fillmode-btn active" data-mode="solid" title="Preenchimento com cor sólida">
+                        <i class="fa-solid fa-square"></i> Sólido
+                    </button>
+                    <button type="button" class="fillmode-btn" data-mode="outline" title="Sem preenchimento (somente linhas da borda externa)">
+                        <i class="fa-regular fa-square"></i> Só Borda
+                    </button>
+                    <button type="button" class="fillmode-btn" data-mode="hatch" title="Hachura interna de linhas na diagonal">
+                        <i class="fa-solid fa-grip-lines-vertical" style="transform: rotate(45deg);"></i> Hachura
+                    </button>
+                </div>
+            </div>
+            <div id="palette-opacity-container" class="palette-opacity-row">
+                <label for="palette-fill-opacity">Opacidade Preench.: <strong id="palette-opacity-val">30%</strong></label>
+                <input type="range" id="palette-fill-opacity" min="0" max="90" step="5" value="30">
+            </div>
+            <div class="palette-opacity-row">
+                <label for="palette-point-radius">Espessura Borda / Ponto: <strong id="palette-radius-val">2.5 px</strong></label>
+                <input type="range" id="palette-point-radius" min="1" max="14" step="0.5" value="2.5">
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/shpjs@4.0.4/dist/shp.js"></script>
+    <script src="https://unpkg.com/@tmcw/togeojson@5.8.1/dist/togeojson.umd.js"></script>
+    <!-- JSZip for KMZ extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- GeoTIFF.js for local Raster (.tif / .tiff) reading -->
+    <script src="https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
